@@ -4,9 +4,6 @@ import AllCategoriesScreenUi
 import GetAllFav
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
-
-
-
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,6 +35,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -61,100 +59,97 @@ import com.example.shopping.presentation.screens.SingUpScreenUi
 import com.example.shopping.presentation.screens.GetAllProducts
 import com.google.firebase.auth.FirebaseAuth
 
-
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")  // surpress the innerpadding of the scaffold, because it is not used. instead of it hard code ".padding(bottom = if (shouldShowBottomBar.value) 60.dp else 0.dp)" 60dp is used
-
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun App(firebaseAuth: FirebaseAuth ) {
-
-
+fun App(firebaseAuth: FirebaseAuth) {
     val navController = rememberNavController()
-
     var selectedItem by remember { mutableIntStateOf(0) }
-
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination?.route
     val shouldShowBottomBar = remember { mutableStateOf(false) }
 
+    // Determine initial navigation state
+    val startScreen = remember(firebaseAuth.currentUser) {
+        if (firebaseAuth.currentUser == null) {
+            SubNavigation.LoginSingUpScreen
+        } else {
+            SubNavigation.MainHomeScreen
+        }
+    }
+
     LaunchedEffect(currentDestination) {
         shouldShowBottomBar.value = when (currentDestination) {
-            Routes.LoginScreen::class.qualifiedName, Routes.SingUpScreen::class.qualifiedName -> false
+            Routes.LoginScreen::class.qualifiedName, 
+            Routes.SingUpScreen::class.qualifiedName -> false
             else -> true
         }
     }
 
-    val BottomNavItem = listOf(
+    val bottomNavItems = listOf(
         BottomNavItem("Home", Icons.Default.Home, unseletedIcon = Icons.Outlined.Home),
         BottomNavItem("WishList", Icons.Default.Favorite, unseletedIcon = Icons.Outlined.Favorite),
         BottomNavItem("Cart", Icons.Default.ShoppingCart, unseletedIcon = Icons.Outlined.ShoppingCart),
         BottomNavItem("Profile", Icons.Default.Person, unseletedIcon = Icons.Outlined.Person),
-
-        )
-
-    var startScreen = if (firebaseAuth.currentUser == null) {
-        SubNavigation.LoginSingUpScreen
-    } else {
-        SubNavigation.MainHomeScreen
-    }
+    )
 
     Scaffold(
-       // Modifier.fillMaxSize(),
         bottomBar = {
-
             if (shouldShowBottomBar.value) {
-
-                Surface( modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        bottom = WindowInsets.navigationBars            // this automaticaly adjust the hight of app bottom bar according to system navigation home, back etc
-                            .asPaddingValues()
-                            .calculateBottomPadding()
-                    )
-                     // Fixed height for bottom bar
-//                    color = Color.Cyan,
-                   ) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            bottom = WindowInsets.navigationBars
+                                .asPaddingValues()
+                                .calculateBottomPadding()
+                        ),
+                    color = MaterialTheme.colorScheme.surface
+                ) {
                     AnimatedBottomBar(
-
-
                         selectedItem = selectedItem,
-                        itemSize = BottomNavItem.size,
-
-
-//                        modifier = Modifier.padding(bottom =  WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()),
-
+                        itemSize = bottomNavItems.size,
                         containerColor = Color.Transparent,
-                        // indicatorColor = MaterialTheme.colorScheme.primaryContainer,
                         indicatorColor = colorResource(id = R.color.orange),
                         contentColor = MaterialTheme.colorScheme.primary,
-
                         indicatorDirection = IndicatorDirection.BOTTOM,
-
                         indicatorStyle = IndicatorStyle.FILLED,
-
-
-
-
-
-
-
-                        ) {
-                        BottomNavItem.forEachIndexed { index, navigationItem ->
+                    ) {
+                        bottomNavItems.forEachIndexed { index, navigationItem ->
                             BottomBarItem(
                                 modifier = Modifier.align(alignment = Alignment.Top),
                                 selected = selectedItem == index,
                                 onClick = {
-
                                     selectedItem = index
                                     when (index) {
-                                        0 -> navController.navigate(Routes.HomeScreen)
-                                        1 -> navController.navigate(Routes.WishListScreen)
-                                        2 -> navController.navigate(Routes.CartScreen)
-                                        3 -> navController.navigate(Routes.ProfileScreen)
+                                        0 -> navController.navigate(Routes.HomeScreen) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                        1 -> navController.navigate(Routes.WishListScreen) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                        2 -> navController.navigate(Routes.CartScreen) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                        3 -> navController.navigate(Routes.ProfileScreen) {
+                                            popUpTo(navController.graph.findStartDestination().id) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
                                     }
-
-
-
-
                                 },
                                 imageVector = navigationItem.icon,
                                 label = navigationItem.name,
@@ -162,46 +157,33 @@ fun App(firebaseAuth: FirebaseAuth ) {
                             )
                         }
                     }
-
                 }
-
-
             }
         }
-    ) { innerpadding ->
-
+    ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(bottom = if (shouldShowBottomBar.value) 60.dp else 0.dp)
-
         ) {
-
-            NavHost(navController = navController, startDestination = startScreen) {
-
-
+            NavHost(
+                navController = navController,
+                startDestination = startScreen,
+                modifier = Modifier.padding(innerPadding)
+            ) {
                 navigation<SubNavigation.LoginSingUpScreen>(startDestination = Routes.LoginScreen) {
                     composable<Routes.LoginScreen> {
-                        LoginScreenUi(
-                            navController = navController
-                        )
+                        LoginScreenUi(navController = navController)
                     }
 
                     composable<Routes.SingUpScreen> {
-                        SingUpScreenUi(
-                            navController = navController
-                        )
+                        SingUpScreenUi(navController = navController)
                     }
                 }
 
-
                 navigation<SubNavigation.MainHomeScreen>(startDestination = Routes.HomeScreen) {
-
-
                     composable<Routes.HomeScreen> {
-                        HomeScreenUi(
-                            navController = navController
-                        )
+                        HomeScreenUi(navController = navController)
                     }
 
                     composable<Routes.ProfileScreen> {
@@ -209,85 +191,49 @@ fun App(firebaseAuth: FirebaseAuth ) {
                     }
 
                     composable<Routes.WishListScreen> {
-                        GetAllFav(
-                            navController = navController
-                        )
+                        GetAllFav(navController = navController)
                     }
 
                     composable<Routes.CartScreen> {
-                        CartScreenUi(
-                            navController = navController
-                        )
+                        CartScreenUi(navController = navController)
                     }
+
                     composable<Routes.PayScreen> {
                         PayScreen()
                     }
 
-
-
-
                     composable<Routes.SeeAllProductsScreen> {
-                        GetAllProducts(
-                            navController = navController
-                        )
-
+                        GetAllProducts(navController = navController)
                     }
 
                     composable<Routes.AllCategoriesScreen> {
-                        AllCategoriesScreenUi(
-                            navController = navController
-                        )
-
-
+                        AllCategoriesScreenUi(navController = navController)
                     }
 
+                    composable<Routes.EachProductDetailsScreen> { route ->
+                        EachProductDetailsScreenUi(
+                            productId = route.productID,
+                            navController = navController
+                        )
+                    }
+
+                    composable<Routes.EachCategoryItemsScreen> { route ->
+                        EachCategorieProductScreenUi(
+                            categoryName = route.categoryName,
+                            navController = navController
+                        )
+                    }
+
+                    composable<Routes.CheckoutScreen> { route ->
+                        CheckOutScreenUi(
+                            productId = route.productID,
+                            navController = navController
+                        )
+                    }
                 }
-
-
-
-
-
-
-
-                composable<Routes.EachProductDetailsScreen> {
-                    val product: Routes.EachProductDetailsScreen = it.toRoute()
-                    EachProductDetailsScreenUi(
-                        productID = product.productID,
-                        navController = navController
-
-
-                    )
-                }
-
-                composable<Routes.EachCategoryItemsScreen> {
-                    val category: Routes.EachCategoryItemsScreen = it.toRoute()
-                    EachCategorieProductScreenUi(
-                        categoryName = category.categoryName,
-                        navController = navController
-                    )
-                }
-
-                composable<Routes.CheckoutScreen> {
-                    val product: Routes.EachProductDetailsScreen = it.toRoute()
-                    val payTest = null
-                    CheckOutScreenUi(
-                        productID = product.productID,
-                        navController = navController ,
-                        pay = { payTest })
-                }
-
-
             }
-
-
         }
-
     }
-
-
-
-
 }
-
 
 data class BottomNavItem(val name: String, val icon: ImageVector, val unseletedIcon: ImageVector)

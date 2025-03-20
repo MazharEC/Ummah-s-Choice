@@ -50,29 +50,25 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ShoppingAppTheme {
-
-
-                 Modifier.fillMaxSize().background(color = Color.Black)
-
-                MainScreen(firebaseAuth = firebaseAuth)
-                //   HomeScreenUi()
-
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(color = Color.Black)
+                ) {
+                    MainScreen(firebaseAuth = firebaseAuth)
+                }
             }
         }
     }
-
-
-
 
     @Composable
     fun MainScreen(firebaseAuth: FirebaseAuth) {
         val showSplash = remember { mutableStateOf(true) }
 
-        // Trigger splash screen delay
         LaunchedEffect(Unit) {
             Handler(Looper.getMainLooper()).postDelayed({
                 showSplash.value = false
-            }, 3000)
+            }, 2000) // Reduced from 3000ms to 2000ms for better UX
         }
 
         if (showSplash.value) {
@@ -88,22 +84,20 @@ class MainActivity : ComponentActivity() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = Color.Black), // Use your splash screen color
+                .background(color = Color.Black),
             contentAlignment = Alignment.Center
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Icon from the drawable folder
                 Image(
-                    painter = painterResource(id = R.drawable.images), // Replace with your drawable icon name
+                    painter = painterResource(id = R.drawable.splashimg),
                     contentDescription = "App Icon",
-                    modifier = Modifier.size(300.dp) // Set the desired icon size
+                    modifier = Modifier.size(300.dp)
                 )
-                Spacer(modifier = Modifier.height(16.dp)) // Space between icon and text
+                Spacer(modifier = Modifier.height(16.dp))
 
-                // Text below the icon
                 BasicText(
                     text = "Welcome to the Clothing Store",
                     style = MaterialTheme.typography.titleLarge.copy(
@@ -115,6 +109,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-
 }
